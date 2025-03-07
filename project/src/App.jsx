@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Editor from "@monaco-editor/react";
-import { FiUpload, FiCopy, FiSave } from 'react-icons/fi';
+import { FiUpload, FiCopy, FiSave, FiMenu, FiX } from 'react-icons/fi';
 import { Wand2, Bug, Play } from 'lucide-react';
 import './App.css';
 
@@ -9,9 +9,14 @@ function App() {
   const [selectedLanguage2, setSelectedLanguage2] = useState('JavaScript');
   const [inputCode, setInputCode] = useState('');
   const [outputCode, setOutputCode] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const editorContainerRef = useRef(null);
   const inputEditorRef = useRef(null);
   const outputEditorRef = useRef(null);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   const languageOptions = [
     { value: 'Python', label: 'Python', icon: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg', editorLang: 'python' },
@@ -23,7 +28,6 @@ function App() {
     { value: 'Ruby', label: 'Ruby', icon: 'https://upload.wikimedia.org/wikipedia/commons/7/73/Ruby_logo.svg', editorLang: 'ruby' }
   ];
 
-  // Update editor language when selection changes
   useEffect(() => {
     if (inputEditorRef.current) {
       const model = inputEditorRef.current.getModel();
@@ -55,7 +59,6 @@ function App() {
       monaco.editor.setModelLanguage(editor.getModel(), selectedLang.editorLang);
     }
   };
-
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -120,126 +123,138 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <div className="language-selectors">
-        <div className="language-option">
-          <img
-            src={languageOptions.find(lang => lang.value === selectedLanguage1)?.icon}
-            alt={selectedLanguage1}
-            className="language-logo"
-          />
-          <select
-            value={selectedLanguage1}
-            onChange={(e) => setSelectedLanguage1(e.target.value)}
-            className="language-select"
-          >
-            {languageOptions.map(lang => (
-              <option key={lang.value} value={lang.value}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </div>
+    <>
+      <nav className="navbar">
+  <a href="/" className="navbar-brand">CodeTranslate</a>
+  <div className={`navbar-links`}>
+    <a href="/" className="navbar-link">Home</a>
+    <a href="/saved" className="navbar-link">Saved</a>
+    <a href="/collab" className="navbar-link">Collab</a>
+    <button className="sign-in-btn">Sign In</button>
+  </div>
+</nav>
 
-        <div className="language-option">
-          <img
-            src={languageOptions.find(lang => lang.value === selectedLanguage2)?.icon}
-            alt={selectedLanguage2}
-            className="language-logo"
-          />
-          <select
-            value={selectedLanguage2}
-            onChange={(e) => setSelectedLanguage2(e.target.value)}
-            className="language-select"
-          >
-            {languageOptions.map(lang => (
-              <option key={lang.value} value={lang.value}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="code-sections" ref={editorContainerRef}>
-        <div className="code-section">
-          <div className="editor-header">
-            <button
-              className="icon-button"
-              onClick={() => document.getElementById('fileInput').click()}
-              title="Upload File"
+      <div className="container">
+        <div className="language-selectors">
+          <div className="language-option">
+            <img
+              src={languageOptions.find(lang => lang.value === selectedLanguage1)?.icon}
+              alt={selectedLanguage1}
+              className="language-logo"
+            />
+            <select
+              value={selectedLanguage1}
+              onChange={(e) => setSelectedLanguage1(e.target.value)}
+              className="language-select"
             >
-              <FiUpload />
-            </button>
-            <input
-              type="file"
-              id="fileInput"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
+              {languageOptions.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="language-option">
+            <img
+              src={languageOptions.find(lang => lang.value === selectedLanguage2)?.icon}
+              alt={selectedLanguage2}
+              className="language-logo"
+            />
+            <select
+              value={selectedLanguage2}
+              onChange={(e) => setSelectedLanguage2(e.target.value)}
+              className="language-select"
+            >
+              {languageOptions.map(lang => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="code-sections" ref={editorContainerRef}>
+          <div className="code-section">
+            <div className="editor-header">
+              <button
+                className="icon-button"
+                onClick={() => document.getElementById('fileInput').click()}
+                title="Upload File"
+              >
+                <FiUpload />
+              </button>
+              <input
+                type="file"
+                id="fileInput"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+            <Editor
+              height="400px"
+              language={languageOptions.find(lang => lang.value === selectedLanguage1)?.editorLang}
+              value={inputCode}
+              onChange={setInputCode}
+              theme="vs-light"
+              options={editorOptions}
+              onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, true)}
+              loading={<div className="editor-loading">Loading editor...</div>}
+              className="monaco-editor-instance"
             />
           </div>
-          <Editor
-            height="400px"
-            language={languageOptions.find(lang => lang.value === selectedLanguage1)?.editorLang}
-            value={inputCode}
-            onChange={setInputCode}
-            theme="vs-light"
-            options={editorOptions}
-            onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, true)}
-            loading={<div className="editor-loading">Loading editor...</div>}
-            className="monaco-editor-instance"
-          />
-        </div>
 
-        <div className="code-section">
-          <div className="editor-header">
-            <button className="icon-button" onClick={handleCopy} title="Copy Code">
-              <FiCopy />
-            </button>
-            <button className="icon-button" onClick={handleSave} title="Save Code">
-              <FiSave />
-            </button>
+          <div className="code-section">
+            <div className="editor-header">
+              <button className="icon-button" onClick={handleCopy} title="Copy Code">
+                <FiCopy />
+              </button>
+              <button className="icon-button" onClick={handleSave} title="Save Code">
+                <FiSave />
+              </button>
+            </div>
+            <Editor
+              height="400px"
+              language={languageOptions.find(lang => lang.value === selectedLanguage2)?.editorLang}
+              value={outputCode}
+              theme="vs-light"
+              options={{
+                ...editorOptions,
+                readOnly: true
+              }}
+              onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, false)}
+              loading={<div className="editor-loading">Loading editor...</div>}
+              className="monaco-editor-instance"
+            />
           </div>
-          <Editor
-            height="400px"
-            language={languageOptions.find(lang => lang.value === selectedLanguage2)?.editorLang}
-            value={outputCode}
-            theme="vs-light"
-            options={{
-              ...editorOptions,
-              readOnly: true
-            }}
-            onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, false)}
-            loading={<div className="editor-loading">Loading editor...</div>}
-            className="monaco-editor-instance"
-          />
+        </div>
+
+        <div className="button-container">
+          <button 
+            className="action-button convert-button" 
+            onClick={handleConvert}
+          >
+            <Wand2 className="button-icon" />
+            Convert
+          </button>
+          <button 
+            className="action-button debug-button" 
+            onClick={handleDebug}
+          >
+            <Bug className="button-icon" />
+            Debug
+          </button>
+          <button 
+            className="action-button evaluate-button" 
+            onClick={handleEvaluate}
+          >
+            <Play className="button-icon" />
+            Evaluate
+          </button>
         </div>
       </div>
-
-      <div className="button-container">
-        <button 
-          className="action-button convert-button" 
-          onClick={handleConvert}
-        >
-          <Wand2 className="button-icon" />
-          Convert
-        </button>
-        <button 
-          className="action-button debug-button" 
-          onClick={handleDebug}
-        >
-         <Bug className="button-icon" />
-          Debug
-        </button>
-        <button 
-          className="action-button evaluate-button" 
-          onClick={handleEvaluate}
-        >
-          <Play className ="button-icon" />
-          Evaluate
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
