@@ -4,7 +4,7 @@ import Editor from "@monaco-editor/react";
 import { FiUpload, FiCopy, FiSave } from "react-icons/fi";
 import { Wand2, Bug, Play } from "lucide-react";
 import axios from "axios";
-import { auth } from "./firebase"; // Import Firebase auth
+import { auth } from "./firebase";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -23,7 +23,7 @@ function Home({ user }) {
   const outputEditorRef = useRef(null);
 
   const languageOptions = [
-    { value: "Python", label: "Python", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", editorLang: "python" },
+    { value: "Python", label: "Python", icon: "httpsasc: https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", editorLang: "python" },
     { value: "JavaScript", label: "JavaScript", icon: "https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png", editorLang: "javascript" },
     { value: "Java", label: "Java", icon: "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/Java_programming_language_logo.svg/121px-Java_programming_language_logo.svg.png", editorLang: "java" },
     { value: "C", label: "C", icon: "https://upload.wikimedia.org/wikipedia/commons/1/19/C_Logo.png", editorLang: "c" },
@@ -78,11 +78,7 @@ function Home({ user }) {
       const token = await auth.currentUser.getIdToken();
       const response = await axios.post(
         "http://localhost:5000/api/convert",
-        {
-          inputCode,
-          fromLanguage: selectedLanguage1,
-          toLanguage: selectedLanguage2,
-        },
+        { inputCode, fromLanguage: selectedLanguage1, toLanguage: selectedLanguage2 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOutputCode(response.data.convertedCode);
@@ -97,10 +93,7 @@ function Home({ user }) {
       const token = await auth.currentUser.getIdToken();
       const response = await axios.post(
         "http://localhost:5000/api/debug",
-        {
-          inputCode,
-          language: selectedLanguage1,
-        },
+        { inputCode, language: selectedLanguage1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOutputCode(response.data.debugResult);
@@ -115,10 +108,7 @@ function Home({ user }) {
       const token = await auth.currentUser.getIdToken();
       const response = await axios.post(
         "http://localhost:5000/api/evaluate",
-        {
-          inputCode,
-          language: selectedLanguage1,
-        },
+        { inputCode, language: selectedLanguage1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOutputCode(response.data.evaluationResult);
@@ -313,7 +303,11 @@ function Signup() {
       navigate("/"); // Redirect to Home after signup
     } catch (error) {
       console.error("Signup error:", error.message);
-      alert("Signup failed: " + error.message);
+      if (error.code === "auth/email-already-in-use") {
+        alert("This email is already in use. Please log in instead.");
+      } else {
+        alert("Signup failed: " + error.message);
+      }
     }
   };
 
@@ -347,13 +341,22 @@ function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        // Ensure redirect to Home if user is logged in
+        navigate("/");
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
+    try {
+      await signOut(auth);
+      setUser(null); // Clear user state immediately
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (

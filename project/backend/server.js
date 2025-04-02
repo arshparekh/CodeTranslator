@@ -2,6 +2,7 @@ import express from "express";
 import axios from "axios";
 import cors from "cors";
 import admin from "firebase-admin";
+import serviceAccount from "./path to your firebase key" with { type: "json" }; // Adjust filename as needed
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,13 +10,12 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize Firebase Admin SDK (with Firestore)
-const serviceAccount = require("./path-to-your-service-account-key.json"); // From Firebase Console
+// Initialize Firebase Admin SDK with Firestore
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const db = admin.firestore(); // Firestore instance
+const db = admin.firestore();
 
 // Middleware to Verify Firebase Token
 const authenticateToken = async (req, res, next) => {
@@ -24,7 +24,7 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken; // Attach user info to request
+    req.user = decodedToken;
     next();
   } catch (error) {
     res.status(401).json({ error: "Invalid token" });
@@ -33,13 +33,13 @@ const authenticateToken = async (req, res, next) => {
 
 // Auth Endpoint to Sync User with Firestore
 app.post("/api/auth", async (req, res) => {
+  console.log("Received /api/auth request with token:", req.body.token);
   const { token } = req.body;
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
     const { uid, email } = decodedToken;
 
-    // Check if user exists in Firestore, create if not
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) {
@@ -51,12 +51,13 @@ app.post("/api/auth", async (req, res) => {
 
     res.json({ message: "User authenticated", uid, email });
   } catch (error) {
+    console.error("Auth error:", error);
     res.status(500).json({ error: "Authentication failed" });
   }
 });
 
 // Your Existing Endpoints (Protected with Authentication)
-const GEMINI_API_KEY = ""; // Replace with your Gemini API key
+const GEMINI_API_KEY = "AIzaSyATEYOqHkQIhGWD0tSWLa5x0YLwufRy6tc"; // Replace with your Gemini API key
 
 app.post("/api/convert", authenticateToken, async (req, res) => {
   try {
@@ -69,7 +70,6 @@ app.post("/api/convert", authenticateToken, async (req, res) => {
     );
 
     const convertedCode = response.data.candidates[0].content.parts[0].text;
-    // Optionally save the conversion to Firestore
     await db.collection("conversions").add({
       uid: req.user.uid,
       inputCode,
@@ -97,7 +97,6 @@ app.post("/api/debug", authenticateToken, async (req, res) => {
     );
 
     const debugResult = response.data.candidates[0].content.parts[0].text;
-    // Optionally save the debug result
     await db.collection("debugs").add({
       uid: req.user.uid,
       inputCode,
@@ -124,7 +123,6 @@ app.post("/api/evaluate", authenticateToken, async (req, res) => {
     );
 
     const evaluationResult = response.data.candidates[0].content.parts[0].text;
-    // Optionally save the evaluation
     await db.collection("evaluations").add({
       uid: req.user.uid,
       inputCode,
