@@ -3,6 +3,7 @@ import Editor from "@monaco-editor/react";
 import { FiUpload, FiCopy, FiSave, FiMenu, FiX } from 'react-icons/fi';
 import { Wand2, Bug, Play } from 'lucide-react';
 import './App.css';
+import axios from 'axios';
 
 function App() {
   const [selectedLanguage1, setSelectedLanguage1] = useState('Python');
@@ -71,17 +72,44 @@ function App() {
     }
   };
 
-  const handleConvert = () => {
-    console.log('Converting...', inputCode);
-    setOutputCode(`// Converted code from ${selectedLanguage1} to ${selectedLanguage2}\n${inputCode}`);
+  const handleConvert = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/convert', {
+        inputCode: inputCode,
+        fromLanguage: selectedLanguage1,
+        toLanguage: selectedLanguage2,
+      });
+      setOutputCode(response.data.convertedCode);
+    } catch (error) {
+      console.error('Conversion error:', error);
+      alert('Conversion failed. Please try again.');
+    }
   };
 
-  const handleDebug = () => {
-    console.log('Debug clicked', inputCode);
+  const handleDebug = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/debug', {
+        inputCode: inputCode,
+        language: selectedLanguage1,
+      });
+      setOutputCode(response.data.debugResult);
+    } catch (error) {
+      console.error('Debug error:', error);
+      alert('Debugging failed. Please try again.');
+    }
   };
 
-  const handleEvaluate = () => {
-    console.log('Evaluate clicked', inputCode);
+  const handleEvaluate = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/evaluate', {
+        inputCode: inputCode,
+        language: selectedLanguage1,
+      });
+      setOutputCode(response.data.evaluationResult);
+    } catch (error) {
+      console.error('Evaluation error:', error);
+      alert('Evaluation failed. Please try again.');
+    }
   };
 
   const handleCopy = async () => {
