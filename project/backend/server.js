@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors()); // Use cors middleware
 app.use(express.json());
 
-const GEMINI_API_KEY = 'AIzaSyBEnl3uBMq5ajwrqiH99G4MxUKtNu8auW4'; // Replace with your Gemini API key
+const GEMINI_API_KEY = ''; // Replace with your Gemini API key
 
 
 app.post('/api/convert', async(req, res) => {
