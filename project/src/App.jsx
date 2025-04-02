@@ -155,7 +155,6 @@ function Home({ user }) {
 
   return (
     <div className="container">
-      <h1>CodeTranslate {user ? `- Welcome, ${user.email}` : ""}</h1>
       <div className="language-selectors">
         <div className="language-option">
           <img
